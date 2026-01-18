@@ -10,9 +10,10 @@ from config import OKX_API_KEY, OKX_API_SECRET, OKX_PASSPHRASE
 
 BASE_URL = "https://www.okx.com"
 
-def _headers(method, path):
+def _headers(method, path, body=""):
     ts = str(time.time())
-    msg = ts + method + path
+    msg = ts + method + path + body
+
     sign = base64.b64encode(
         hmac.new(
             OKX_API_SECRET.encode(),
@@ -25,12 +26,14 @@ def _headers(method, path):
         "OK-ACCESS-KEY": OKX_API_KEY,
         "OK-ACCESS-SIGN": sign,
         "OK-ACCESS-TIMESTAMP": ts,
-        "OK-ACCESS-PASSPHRASE": OKX_PASSPHRASE
+        "OK-ACCESS-PASSPHRASE": OKX_PASSPHRASE,
+        "Content-Type": "application/json"
     }
+
 
 def get_balance_usdt():
     path = "/api/v5/account/balance"
-    r = requests.get(BASE_URL + path, headers=_headers("GET", path), timeout=10)
+    r = requests.get(BASE_URL + path, headers=_headers("GET", path, ""), timeout=10)
     r.raise_for_status()
     data = r.json()
 
