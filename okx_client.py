@@ -37,15 +37,21 @@ def _headers(method: str, path: str, body: str = ""):
     }
 
 
-def get_balance_usdt() -> float:
+def get_balance_usdt() -> float | None:
     path = "/api/v5/account/balance"
 
-    r = requests.get(
-        BASE_URL + path,
-        headers=_headers("GET", path, ""),
-        timeout=10
-    )
-    r.raise_for_status()
+    try:
+        r = requests.get(
+            BASE_URL + path,
+            headers=_headers("GET", path, ""),
+            timeout=10
+        )
+        r.raise_for_status()
+    except requests.RequestException:
+        # ВАЖЛИВО:
+        # ❌ не валимо workflow
+        # ✅ даємо main.py вирішувати (Variant A)
+        return None
 
     data = r.json()
 

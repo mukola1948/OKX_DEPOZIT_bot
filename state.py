@@ -1,5 +1,5 @@
 # state.py
-# Робота зі state.json (збереження між запусками через Artifacts)
+# Збереження стану між запусками (через GitHub Artifacts)
 
 import json
 from pathlib import Path
@@ -10,7 +10,9 @@ DEFAULT_STATE = {
     "days_count": 1,
     "d_past": None,
     "day_index": None,
-    "values_today": []
+    "values_today": [],
+    "last_sent_balance": None,
+    "last_heartbeat_date": None
 }
 
 def load_state():
