@@ -1,40 +1,32 @@
 # okx_client.py
 # Отримання балансу з OKX (READ ONLY)
 
-import time
 import hmac
 import base64
 import hashlib
 import requests
-import datetime
+from datetime import datetime, timezone
 from config import OKX_API_KEY, OKX_API_SECRET, OKX_PASSPHRASE
 
 BASE_URL = "https://www.okx.com"
 
 
-def _headers(method, path, body=""):
-    # UTC timestamp у вигляді рядка
-    ts = str(time.time())
+def _utc_timestamp():
+    # ISO8601 UTC, як вимагає OKX
+    return datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z")
 
-    # Формування повідомлення для підпису
-    msg = ts + method + path + body
+
+def _headers(method: str, path: str, body: str = ""):
+    ts = _utc_timestamp()
+
+    prehash = ts + method + path + body
     sign = base64.b64encode(
         hmac.new(
-            OKX_API_SECRET.encode(),
-            msg.encode(),
+            OKX_API_SECRET.encode("utf-8"),
+            prehash.encode("utf-8"),
             hashlib.sha256
         ).digest()
     ).decode()
-
-    # Тимчасова перевірка завантаження ключів (без показу значень)
-    print("API_KEY loaded:", bool(OKX_API_KEY))
-    print("API_SECRET loaded:", bool(OKX_API_SECRET))
-    print("PASSPHRASE loaded:", bool(OKX_PASSPHRASE))
-
-    # Використовуємо timezone-aware UTC datetime
-    current_utc = datetime.datetime.now(datetime.timezone.utc)
-    print("Timestamp sent:", ts)
-    print("Current UTC:", current_utc.isoformat())
 
     return {
         "OK-ACCESS-KEY": OKX_API_KEY,
@@ -45,15 +37,21 @@ def _headers(method, path, body=""):
     }
 
 
-def get_balance_usdt():
+def get_balance_usdt() -> float:
     path = "/api/v5/account/balance"
-    # GET запит з body="" для правильного підпису
-    r = requests.get(BASE_URL + path, headers=_headers("GET", path, ""), timeout=10)
+
+    r = requests.get(
+        BASE_URL + path,
+        headers=_headers("GET", path, ""),
+        timeout=10
+    )
     r.raise_for_status()
+
     data = r.json()
 
     total = 0.0
     for acc in data["data"][0]["details"]:
         if acc["ccy"] == "USDT":
             total += float(acc["eq"])
+
     return total
