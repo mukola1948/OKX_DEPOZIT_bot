@@ -1,5 +1,7 @@
+# ============================================================
 # okx_client.py
-# Отримання балансу з OKX (READ ONLY)
+# Отримання балансу USDT з OKX (READ ONLY)
+# ============================================================
 
 import hmac
 import base64
@@ -10,15 +12,14 @@ from config import OKX_API_KEY, OKX_API_SECRET, OKX_PASSPHRASE
 
 BASE_URL = "https://www.okx.com"
 
-
 def _utc_timestamp():
-    # ISO8601 UTC, як вимагає OKX
+    """
+    Поточний час у форматі ISO8601 UTC (для OKX)
+    """
     return datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z")
-
 
 def _headers(method: str, path: str, body: str = ""):
     ts = _utc_timestamp()
-
     prehash = ts + method + path + body
     sign = base64.b64encode(
         hmac.new(
@@ -36,28 +37,20 @@ def _headers(method: str, path: str, body: str = ""):
         "Content-Type": "application/json"
     }
 
-
 def get_balance_usdt() -> float | None:
+    """
+    Отримує сумарний баланс USDT
+    """
     path = "/api/v5/account/balance"
-
     try:
-        r = requests.get(
-            BASE_URL + path,
-            headers=_headers("GET", path, ""),
-            timeout=10
-        )
+        r = requests.get(BASE_URL + path, headers=_headers("GET", path, ""), timeout=10)
         r.raise_for_status()
     except requests.RequestException:
-        # ВАЖЛИВО:
-        # ❌ не валимо workflow
-        # ✅ даємо main.py вирішувати (Variant A)
         return None
 
     data = r.json()
-
     total = 0.0
     for acc in data["data"][0]["details"]:
         if acc["ccy"] == "USDT":
             total += float(acc["eq"])
-
     return total
