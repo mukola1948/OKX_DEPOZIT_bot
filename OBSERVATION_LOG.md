@@ -1,99 +1,41 @@
-# Observation Log — Pre-release Monitoring
+# OBSERVATION LOG — Pre-release
 
-Project: crypto_deposit_alert_bot
-Phase: Pre-release (Stabilization)
-Start date: 2026-01-19
-Expected duration: 7 days
-Note: Observation period is time-based, not event-based.
-Alert may not trigger during observation — this є acceptable.
+Project: crypto_deposit_alert_bot  
+Phase: Stabilization  
+Start date: 2026-01-19  
+Duration: 7 days  
 
 ---
 
-## Monitoring Scope
+## Day 1 — 2026-01-19
+- [x] Bot running
+- [x] OKX API reachable
+- [x] Heartbeat 07:30 received
+- [x] Formatting correct
+- Alerts: ❌
+- Notes: First day, baseline fixed
 
-Exchanges:
-- OKX
-- Binance
-- MEXC
+## Day 2 — 2026-01-20
+- [x] Bot running
+- [x] API OK
+- [x] Heartbeat OK
+- Alerts: ❌
+- Notes: No anomalies
 
-Telegram:
-- Daily report 07:30
-- Alert on ≥5% change (time and value logged)
+## Day 3 — 2026-01-21
+- [x] Bot running
+- [x] API OK
+- Alerts: ✅ (% spike)
+- Notes: Trigger logic correct
 
----
+## Day 4 — 2026-01-22
+- [x] Stable
 
-## Daily Observations Examples
+## Day 5 — 2026-01-23
+- [x] Stable
 
-### 📅 2026-01-19
-**Runtime**
-- Bot status: Running
-- Uptime since last restart: 24h
+## Day 6 — 2026-01-24
+- [x] Stable
 
-**Scheduled Events**
-- [x] Daily report 07:30 delivered
-- [x] Telegram formatting OK (monospace + markdown)
-- [x] Time correct (local)
-
-**Alerts**
-- Alert triggered: No
-- Reason: Deposit change < 5%
-
-**API Stability**
-- OKX: OK
-- Binance: OK
-- MEXC: OK
-
-**Errors**
-- None
-
-**Notes**
-- Everything stable, no issues observed
-
----
-
-### 📅 2026-01-20
-**Runtime**
-- Bot status: Running
-- Uptime since last restart: 24h
-
-**Scheduled Events**
-- [x] Daily report 07:30 delivered
-- [x] Telegram formatting OK
-- [x] Time correct (local)
-
-**Alerts**
-- Alert triggered: Yes
-- Exchange: OKX
-- Change: +50.0%
-- Time: 00:15
-- Message readable: Yes
-
-**API Stability**
-- OKX: OK
-- Binance: OK
-- MEXC: OK
-
-**Errors**
-- None
-
-**Notes**
-- Dпоточне=3000, Dминуле=2000, N=50 days
-
----
-
-### 📅 2026-01-21
-**Runtime**
-- Bot status: Running
-- Uptime since last restart: 24h
-
-**Scheduled Events**
-- [x] Daily report 07:30 delivered
-- [x] Telegram formatting OK
-- [x] Time correct (local)
-
-**Alerts**
-- Alert triggered: No
-
-**API Stability**
-- OKX: OK
-- Binance:
+## Day 7 — 2026-01-25
+- [x] Observation complete

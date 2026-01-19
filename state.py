@@ -1,5 +1,7 @@
+# ============================================
 # state.py
-# Збереження стану між запусками (через GitHub Artifacts)
+# Стан між запусками
+# ============================================
 
 import json
 from pathlib import Path
@@ -7,11 +9,10 @@ from pathlib import Path
 STATE_FILE = Path("state.json")
 
 DEFAULT_STATE = {
-    "days_count": 1,
-    "d_past": None,
+    "days_count": 0,
+    "d_past": 0.0,
     "day_index": None,
     "values_today": [],
-    "last_sent_balance": None,
     "last_heartbeat_date": None
 }
 
