@@ -1,6 +1,6 @@
 # ============================================================
 # state.py
-# Збереження стану між запусками (PERSISTENT STATE)
+# Збереження стану між workflow (PERSISTENT STATE)
 # ============================================================
 
 import json
@@ -9,12 +9,13 @@ from pathlib import Path
 STATE_FILE = Path("state.json")
 
 DEFAULT_STATE = {
-    "days_count": 0,          # Скільки днів бот працює
-    "day_index": None,        # ISO-дата поточного дня
-    "d_past": None,           # Dминуле (агреговане)
-    "avg_today": None,        # ОСТАННЄ розраховане Дсереднє за день
-    "measure_count": 0,       # Лічильник замірів з 00:00 (01..96)
-    "last_heartbeat_date": None
+    "days_count": 0,
+    "day_index": None,
+    "d_past": None,
+    "avg_today": None,
+    "measure_count": 0,
+    "last_heartbeat_date": None,
+    "last_run_id": None
 }
 
 def load_state():
