@@ -1,6 +1,10 @@
 # ============================================================
 # main.py
 # OKX Deposit Alert Bot (INFORMATIONAL)
+#
+# ЧІТКА ЛОГІКА:
+# - n  → кількість замірів сьогодні
+# - D  → кількість завершених днів
 # ============================================================
 
 from datetime import datetime, time
@@ -11,7 +15,12 @@ from calculator import calc_percent, calc_new_d_past
 from formatter import build_message
 import requests
 
-HEARTBEAT_TIME = time(7, 30)
+HEARTBEAT_TIMES = [
+    time(7, 30),
+    time(14, 30),
+    time(21, 30)
+]
+
 PERCENT_THRESHOLD = 5.0
 
 
@@ -26,7 +35,6 @@ def main():
     today = now.date().isoformat()
     run_id = now.strftime("%Y-%m-%dT%H:%M")
 
-    # ---------- GUARD: той самий запуск ----------
     if state["last_run_id"] == run_id:
         return
 
@@ -38,51 +46,50 @@ def main():
     if state["day_index"] is None:
         state.update({
             "day_index": today,
-            "days_count": 0,          # ще ЖОДНОГО завершеного дня
-            "measure_count": 0,
-            "d_past": d_cur,          # базова точка
+            "days_count": 0,          # D_days
+            "measure_count": 0,       # n
+            "d_past": d_cur,
             "avg_today": d_cur,
-            "last_heartbeat_date": None
+            "last_heartbeat_date": {}
         })
 
-    # ---------- ПЕРЕХІД НА НОВИЙ ДЕНЬ ----------
+    # ---------- НОВИЙ ДЕНЬ ----------
     if state["day_index"] != today:
-        # Фіксуємо ВЧОРАШНІЙ день у Dминуле
         state["d_past"] = calc_new_d_past(
             state["d_past"],
             state["avg_today"],
             state["days_count"]
         )
-
         state["days_count"] += 1
         state["measure_count"] = 0
         state["avg_today"] = d_cur
         state["day_index"] = today
-        state["last_heartbeat_date"] = None
+        state["last_heartbeat_date"] = {}
 
-    # ---------- НОВИЙ ЗАМІР СЬОГОДНІ ----------
+    # ---------- НОВИЙ ЗАМІР ----------
     state["measure_count"] += 1
     n = state["measure_count"]
+    D = state["days_count"]
 
-    prev_avg = state["avg_today"]
-    state["avg_today"] = ((prev_avg * (n - 1)) + d_cur) / n
-
+    state["avg_today"] = ((state["avg_today"] * (n - 1)) + d_cur) / n
     percent = calc_percent(d_cur, state["d_past"])
 
     # ---------- % ТРИГЕР ----------
     if abs(percent) >= PERCENT_THRESHOLD:
         send_telegram(build_message(
             d_cur, state["avg_today"], state["d_past"],
-            percent, n, now
+            percent, n, D, now
         ))
 
-    # ---------- HEARTBEAT ----------
-    if now.time() >= HEARTBEAT_TIME and state["last_heartbeat_date"] != today:
-        send_telegram(build_message(
-            d_cur, state["avg_today"], state["d_past"],
-            percent, n, now
-        ))
-        state["last_heartbeat_date"] = today
+    # ---------- HEARTBEAT x3 ----------
+    for t in HEARTBEAT_TIMES:
+        key = t.strftime("%H:%M")
+        if now.time() >= t and state["last_heartbeat_date"].get(key) != today:
+            send_telegram(build_message(
+                d_cur, state["avg_today"], state["d_past"],
+                percent, n, D, now
+            ))
+            state["last_heartbeat_date"][key] = today
 
     state["last_run_id"] = run_id
     save_state(state)

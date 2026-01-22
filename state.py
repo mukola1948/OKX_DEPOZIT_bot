@@ -1,6 +1,6 @@
 # ============================================================
 # state.py
-# Збереження стану між workflow (PERSISTENT STATE)
+# PERSISTENT STATE (ПАМʼЯТЬ БОТА)
 # ============================================================
 
 import json
@@ -14,7 +14,7 @@ DEFAULT_STATE = {
     "d_past": None,
     "avg_today": None,
     "measure_count": 0,
-    "last_heartbeat_date": None,
+    "last_heartbeat_date": {},
     "last_run_id": None
 }
 
