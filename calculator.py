@@ -1,9 +1,6 @@
 # ============================================================
 # calculator.py
-# МАТЕМАТИКА БОТА (БЕЗ TELEGRAM І ФОРМАТУВАННЯ)
-#
-# - calc_percent     → % зміна від Dминуле
-# - calc_new_d_past  → накопичувальне Dминуле за D_days
+# Чиста математика (без форматування і Telegram)
 # ============================================================
 
 def calc_percent(current: float, past: float) -> float:
@@ -12,8 +9,9 @@ def calc_percent(current: float, past: float) -> float:
     return (current - past) / past * 100
 
 
-def calc_new_d_past(old_d_past: float, day_avg: float, d_days: int) -> float:
+def calc_new_d_past(old_d_past: float, day_avg: float, D_days: int) -> float:
     """
-    Накопичувальне середнє за ВСІ ЗАВЕРШЕНІ ДНІ
+    Накопичувальне середнє за всі завершені дні.
+    D_days — КІЛЬКІСТЬ ЗАВЕРШЕНИХ ДНІВ
     """
-    return (old_d_past * d_days + day_avg) / (d_days + 1)
+    return (old_d_past * D_days + day_avg) / (D_days + 1)
