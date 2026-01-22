@@ -31,6 +31,7 @@ def main():
     today = now.date().isoformat()
     run_id = now.strftime("%Y-%m-%dT%H:%M")
 
+    # Захист від повторного запуску в ту саму хвилину
     if state["last_run_id"] == run_id:
         return
 
@@ -83,9 +84,12 @@ def main():
             dt=now
         ))
 
-    # ---------- HEARTBEAT ----------
-    for hb in HEARTBEAT_TIMES:
-        if now.time() >= hb and state["last_heartbeat_date"] != f"{today}_{hb}":
+    # ---------- HEARTBEAT (ВИПРАВЛЕНО) ----------
+    # Надсилаємо ТІЛЬКИ ОДИН heartbeat за запуск
+    for hb in reversed(HEARTBEAT_TIMES):
+        hb_key = f"{today}_{hb}"
+
+        if now.time() >= hb and state["last_heartbeat_date"] != hb_key:
             send_telegram(build_message(
                 d_cur,
                 state["avg_today"],
@@ -95,7 +99,8 @@ def main():
                 D_days=state["days_count"],
                 dt=now
             ))
-            state["last_heartbeat_date"] = f"{today}_{hb}"
+            state["last_heartbeat_date"] = hb_key
+            break  # ← КЛЮЧОВЕ ВИПРАВЛЕННЯ
 
     state["last_run_id"] = run_id
     save_state(state)
