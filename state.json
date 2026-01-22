@@ -1,9 +1,9 @@
 {
-  "days_count": 2,
-  "day_index": "2026-01-22",
-  "d_past": 255.77943343546184,
-  "avg_today": 255.15876744192093,
-  "measure_count": 39,
-  "last_heartbeat_date": "2026-01-22_21:30:00",
-  "last_run_id": "2026-01-22T23:46"
+  "days_count": 3,
+  "day_index": "2026-01-23",
+  "d_past": 255.5725447709482,
+  "avg_today": 253.53062816788025,
+  "measure_count": 1,
+  "last_heartbeat_date": null,
+  "last_run_id": "2026-01-23T00:00"
 }
