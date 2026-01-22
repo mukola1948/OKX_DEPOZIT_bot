@@ -1,19 +1,13 @@
 # ============================================================
 # main.py
 # OKX Deposit Alert Bot (INFORMATIONAL)
-#
-# Логіка:
-# - state.json = єдина памʼять
-# - Дсереднє — інкрементне
-# - Дминуле — фіксується на 00:00
-# - formatter — ЛИШЕ вигляд
 # ============================================================
 
 from datetime import datetime, time
 from config import TZ, TG_BOT_TOKEN, TG_CHAT_ID
 from okx_client import get_balance_usdt
 from state import load_state, save_state
-from calculator import calc_percent
+from calculator import calc_percent, calc_new_d_past
 from formatter import build_message
 import requests
 
@@ -32,7 +26,7 @@ def main():
     today = now.date().isoformat()
     run_id = now.strftime("%Y-%m-%dT%H:%M")
 
-    # Guard-flag: цей run вже був
+    # ---------- GUARD: той самий запуск ----------
     if state["last_run_id"] == run_id:
         return
 
@@ -40,29 +34,36 @@ def main():
     if d_cur is None:
         return
 
-    # ---------- ПЕРШИЙ ЗАПУСК ВЗАГАЛІ ----------
+    # ---------- ПЕРШИЙ ЗАПУСК ----------
     if state["day_index"] is None:
         state.update({
             "day_index": today,
-            "days_count": 1,
+            "days_count": 0,          # ще ЖОДНОГО завершеного дня
             "measure_count": 0,
-            "d_past": d_cur,
+            "d_past": d_cur,          # базова точка
             "avg_today": d_cur,
             "last_heartbeat_date": None
         })
 
-    # ---------- НОВИЙ ДЕНЬ ----------
+    # ---------- ПЕРЕХІД НА НОВИЙ ДЕНЬ ----------
     if state["day_index"] != today:
-        state["d_past"] = state["avg_today"]
+        # Фіксуємо ВЧОРАШНІЙ день у Dминуле
+        state["d_past"] = calc_new_d_past(
+            state["d_past"],
+            state["avg_today"],
+            state["days_count"]
+        )
+
         state["days_count"] += 1
         state["measure_count"] = 0
         state["avg_today"] = d_cur
         state["day_index"] = today
         state["last_heartbeat_date"] = None
 
-    # ---------- НОВИЙ ЗАМІР ----------
+    # ---------- НОВИЙ ЗАМІР СЬОГОДНІ ----------
     state["measure_count"] += 1
     n = state["measure_count"]
+
     prev_avg = state["avg_today"]
     state["avg_today"] = ((prev_avg * (n - 1)) + d_cur) / n
 
