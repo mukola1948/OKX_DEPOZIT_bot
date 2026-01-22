@@ -1,24 +1,33 @@
 # ============================================================
 # formatter.py
-# Формування Telegram-повідомлення
+# Формування Telegram-повідомлення (PLAIN TEXT)
 # ============================================================
 
 def fmt_money(v: float) -> str:
     return f"{int(round(v)):,}".replace(",", " ")
 
 
-def build_message(d_cur, d_avg_today, d_past, percent, D_days, dt):
+def build_message(
+    d_cur: float,
+    d_avg_today: float,
+    d_past: float,
+    percent: float,
+    n_measures: int,   # кількість замірів СЬОГОДНІ
+    D_days: int,       # кількість ЗАВЕРШЕНИХ днів
+    dt
+) -> str:
+
     sign = "+" if percent >= 0 else "-"
     percent_abs = abs(percent)
 
     line1 = f"Дпоточне({sign} {percent_abs:0.1f} %)= {fmt_money(d_cur)}"
-    line2 = f"Дсереднє(1-{D_days:02d}).....= {fmt_money(d_avg_today)}"
-    line3 = f"Дминуле({14*' '}{D_days})= {fmt_money(d_past)}"
-
+    line2 = f"Дсереднє(1-{n_measures:02d}).....= {fmt_money(d_avg_today)}"
+    line3 = f"Дминуле({12*' '}{D_days})= {fmt_money(d_past)}"
     line4 = (
-        "OKX....."
+        "OKX"
+        + "." * 6
         + dt.strftime("%H:%M")
-        + "..."
+        + "." * 3
         + dt.strftime("%d-%m-%Y")
     )
 

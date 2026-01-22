@@ -11,11 +11,11 @@ from calculator import calc_percent, calc_new_d_past
 from formatter import build_message
 import requests
 
-HEARTBEAT_TIMES = {
-    "07:30": time(7, 30),
-    "14:30": time(14, 30),
-    "21:30": time(21, 30),
-}
+HEARTBEAT_TIMES = [
+    time(7, 30),
+    time(14, 30),
+    time(21, 30),
+]
 
 PERCENT_THRESHOLD = 5.0
 
@@ -42,11 +42,11 @@ def main():
     if state["day_index"] is None:
         state.update({
             "day_index": today,
-            "D_days": 0,
-            "n_measures_today": 0,
+            "days_count": 0,
+            "measure_count": 0,
             "d_past": d_cur,
             "avg_today": d_cur,
-            "last_heartbeat_date": {}
+            "last_heartbeat_date": None
         })
 
     # ---------- НОВИЙ ДЕНЬ ----------
@@ -54,18 +54,17 @@ def main():
         state["d_past"] = calc_new_d_past(
             state["d_past"],
             state["avg_today"],
-            state["D_days"]
+            state["days_count"]
         )
-
-        state["D_days"] += 1
-        state["n_measures_today"] = 0
+        state["days_count"] += 1
+        state["measure_count"] = 0
         state["avg_today"] = d_cur
         state["day_index"] = today
-        state["last_heartbeat_date"] = {}
+        state["last_heartbeat_date"] = None
 
-    # ---------- НОВИЙ ВИМІР ----------
-    state["n_measures_today"] += 1
-    n = state["n_measures_today"]
+    # ---------- НОВИЙ ЗАМІР ----------
+    state["measure_count"] += 1
+    n = state["measure_count"]
 
     prev_avg = state["avg_today"]
     state["avg_today"] = ((prev_avg * (n - 1)) + d_cur) / n
@@ -75,18 +74,28 @@ def main():
     # ---------- % ТРИГЕР ----------
     if abs(percent) >= PERCENT_THRESHOLD:
         send_telegram(build_message(
-            d_cur, state["avg_today"], state["d_past"],
-            percent, state["D_days"], now
+            d_cur,
+            state["avg_today"],
+            state["d_past"],
+            percent,
+            n_measures=n,
+            D_days=state["days_count"],
+            dt=now
         ))
 
     # ---------- HEARTBEAT ----------
-    for key, t in HEARTBEAT_TIMES.items():
-        if now.time() >= t and state["last_heartbeat_date"].get(key) != today:
+    for hb in HEARTBEAT_TIMES:
+        if now.time() >= hb and state["last_heartbeat_date"] != f"{today}_{hb}":
             send_telegram(build_message(
-                d_cur, state["avg_today"], state["d_past"],
-                percent, state["D_days"], now
+                d_cur,
+                state["avg_today"],
+                state["d_past"],
+                percent,
+                n_measures=n,
+                D_days=state["days_count"],
+                dt=now
             ))
-            state["last_heartbeat_date"][key] = today
+            state["last_heartbeat_date"] = f"{today}_{hb}"
 
     state["last_run_id"] = run_id
     save_state(state)
