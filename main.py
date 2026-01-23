@@ -1,9 +1,10 @@
 # ============================================================
 # main.py
 # OKX Deposit Alert Bot (INFORMATIONAL)
+# Виправлено: точне відстеження HEARTBEAT через словник last_heartbeat_times
 # ============================================================
 
-from datetime import datetime, time
+from datetime import datetime, time, timedelta
 from config import TZ, TG_BOT_TOKEN, TG_CHAT_ID
 from okx_client import get_balance_usdt
 from state import load_state, save_state
@@ -11,16 +12,21 @@ from calculator import calc_percent, calc_new_d_past
 from formatter import build_message
 import requests
 
+# ---------- ЧАСИ КОНТРОЛЬНИХ ПОВІДОМЛЕНЬ ----------
 HEARTBEAT_TIMES = [
     time(7, 30),
     time(14, 30),
     time(21, 30),
 ]
 
+# ---------- ПОРОГ % ЗМІНИ ДЛЯ ВІДПРАВКИ ----------
 PERCENT_THRESHOLD = 5.0
 
 
 def send_telegram(text: str):
+    """
+    Відправка повідомлення в Telegram через Bot API
+    """
     url = f"https://api.telegram.org/bot{TG_BOT_TOKEN}/sendMessage"
     requests.post(url, json={"chat_id": TG_CHAT_ID, "text": text})
 
@@ -31,8 +37,8 @@ def main():
     today = now.date().isoformat()
     run_id = now.strftime("%Y-%m-%dT%H:%M")
 
-    # Захист від повторного запуску в ту саму хвилину
-    if state["last_run_id"] == run_id:
+    # ---------- ПРОПУСК ДУБЛІВ ----------
+    if state.get("last_run_id") == run_id:
         return
 
     d_cur = get_balance_usdt()
@@ -40,18 +46,18 @@ def main():
         return
 
     # ---------- ПЕРШИЙ ЗАПУСК ----------
-    if state["day_index"] is None:
+    if state.get("day_index") is None:
         state.update({
             "day_index": today,
             "days_count": 0,
             "measure_count": 0,
             "d_past": d_cur,
             "avg_today": d_cur,
-            "last_heartbeat_date": None
+            "last_heartbeat_times": {}  # словник для останніх відправок
         })
 
     # ---------- НОВИЙ ДЕНЬ ----------
-    if state["day_index"] != today:
+    if state.get("day_index") != today:
         state["d_past"] = calc_new_d_past(
             state["d_past"],
             state["avg_today"],
@@ -61,7 +67,7 @@ def main():
         state["measure_count"] = 0
         state["avg_today"] = d_cur
         state["day_index"] = today
-        state["last_heartbeat_date"] = None
+        state["last_heartbeat_times"] = {}
 
     # ---------- НОВИЙ ЗАМІР ----------
     state["measure_count"] += 1
@@ -84,12 +90,12 @@ def main():
             dt=now
         ))
 
-    # ---------- HEARTBEAT (ВИПРАВЛЕНО) ----------
-    # Надсилаємо ТІЛЬКИ ОДИН heartbeat за запуск
-    for hb in reversed(HEARTBEAT_TIMES):
-        hb_key = f"{today}_{hb}"
-
-        if now.time() >= hb and state["last_heartbeat_date"] != hb_key:
+    # ---------- HEARTBEAT ----------
+    for hb in HEARTBEAT_TIMES:
+        hb_dt = datetime.combine(now.date(), hb, tzinfo=TZ)
+        last_sent = state["last_heartbeat_times"].get(str(hb))
+        if now >= hb_dt and (last_sent is None or now - last_sent >= timedelta(minutes=1)):
+            # Відправка тільки один раз на кожен контрольний час
             send_telegram(build_message(
                 d_cur,
                 state["avg_today"],
@@ -99,8 +105,7 @@ def main():
                 D_days=state["days_count"],
                 dt=now
             ))
-            state["last_heartbeat_date"] = hb_key
-            break  # ← КЛЮЧОВЕ ВИПРАВЛЕННЯ
+            state["last_heartbeat_times"][str(hb)] = now
 
     state["last_run_id"] = run_id
     save_state(state)
