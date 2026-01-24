@@ -92,7 +92,8 @@ def main():
     if not alert_sent:
         for hb in HEARTBEAT_TIMES:
             hb_dt = datetime.combine(now.date(), hb, tzinfo=TZ)
-            last_sent = state["last_heartbeat_times"].get(str(hb))
+            last_sent_str = state["last_heartbeat_times"].get(str(hb))
+            last_sent = datetime.fromisoformat(last_sent_str) if last_sent_str else None
             if now >= hb_dt and (last_sent is None or now - last_sent >= timedelta(minutes=1)):
                 send_telegram(build_message(
                     d_cur,
@@ -103,7 +104,7 @@ def main():
                     d_days=state["days_count"],
                     dt=now
                 ))
-                state["last_heartbeat_times"][str(hb)] = now
+                state["last_heartbeat_times"][str(hb)] = now.isoformat()
                 break  # 🔒 лише ОДНЕ heartbeat за запуск
 
     state["last_run_id"] = run_id
