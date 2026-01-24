@@ -1,7 +1,7 @@
 # ============================================================
 # main.py
 # OKX Deposit Alert Bot (INFORMATIONAL)
-# Виправлено: точне відстеження HEARTBEAT через словник last_heartbeat_times
+# Виправлено: коректна передача d_days у build_message
 # ============================================================
 
 from datetime import datetime, time, timedelta
@@ -19,7 +19,7 @@ HEARTBEAT_TIMES = [
     time(21, 30),
 ]
 
-# ---------- ПОРОГ % ЗМІНИ ДЛЯ ВІДПРАВКИ ----------
+# ---------- ПОРОГ % ЗМІНИ ----------
 PERCENT_THRESHOLD = 5.0
 
 
@@ -37,7 +37,7 @@ def main():
     today = now.date().isoformat()
     run_id = now.strftime("%Y-%m-%dT%H:%M")
 
-    # ---------- ПРОПУСК ДУБЛІВ ----------
+    # ---------- ЗАХИСТ ВІД ДУБЛІВ ----------
     if state.get("last_run_id") == run_id:
         return
 
@@ -53,7 +53,7 @@ def main():
             "measure_count": 0,
             "d_past": d_cur,
             "avg_today": d_cur,
-            "last_heartbeat_times": {}  # словник для останніх відправок
+            "last_heartbeat_times": {}
         })
 
     # ---------- НОВИЙ ДЕНЬ ----------
@@ -78,7 +78,7 @@ def main():
 
     percent = calc_percent(d_cur, state["d_past"])
 
-    # ---------- % ТРИГЕР ----------
+    # ---------- ALERT ----------
     if abs(percent) >= PERCENT_THRESHOLD:
         send_telegram(build_message(
             d_cur,
@@ -86,7 +86,7 @@ def main():
             state["d_past"],
             percent,
             n_measures=n,
-            D_days=state["days_count"],
+            d_days=state["days_count"],
             dt=now
         ))
 
@@ -95,14 +95,13 @@ def main():
         hb_dt = datetime.combine(now.date(), hb, tzinfo=TZ)
         last_sent = state["last_heartbeat_times"].get(str(hb))
         if now >= hb_dt and (last_sent is None or now - last_sent >= timedelta(minutes=1)):
-            # Відправка тільки один раз на кожен контрольний час
             send_telegram(build_message(
                 d_cur,
                 state["avg_today"],
                 state["d_past"],
                 percent,
                 n_measures=n,
-                D_days=state["days_count"],
+                d_days=state["days_count"],
                 dt=now
             ))
             state["last_heartbeat_times"][str(hb)] = now
