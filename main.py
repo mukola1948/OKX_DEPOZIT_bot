@@ -1,7 +1,6 @@
 # ============================================================
 # main.py
 # OKX Deposit Alert Bot (INFORMATIONAL)
-# Виправлено: коректна передача d_days у build_message
 # ============================================================
 
 from datetime import datetime, time, timedelta
@@ -12,21 +11,16 @@ from calculator import calc_percent, calc_new_d_past
 from formatter import build_message
 import requests
 
-# ---------- ЧАСИ КОНТРОЛЬНИХ ПОВІДОМЛЕНЬ ----------
 HEARTBEAT_TIMES = [
     time(7, 30),
     time(14, 30),
     time(21, 30),
 ]
 
-# ---------- ПОРОГ % ЗМІНИ ----------
 PERCENT_THRESHOLD = 5.0
 
 
 def send_telegram(text: str):
-    """
-    Відправка повідомлення в Telegram через Bot API
-    """
     url = f"https://api.telegram.org/bot{TG_BOT_TOKEN}/sendMessage"
     requests.post(url, json={"chat_id": TG_CHAT_ID, "text": text})
 
@@ -37,7 +31,6 @@ def main():
     today = now.date().isoformat()
     run_id = now.strftime("%Y-%m-%dT%H:%M")
 
-    # ---------- ЗАХИСТ ВІД ДУБЛІВ ----------
     if state.get("last_run_id") == run_id:
         return
 
@@ -45,7 +38,6 @@ def main():
     if d_cur is None:
         return
 
-    # ---------- ПЕРШИЙ ЗАПУСК ----------
     if state.get("day_index") is None:
         state.update({
             "day_index": today,
@@ -56,7 +48,6 @@ def main():
             "last_heartbeat_times": {}
         })
 
-    # ---------- НОВИЙ ДЕНЬ ----------
     if state.get("day_index") != today:
         state["d_past"] = calc_new_d_past(
             state["d_past"],
@@ -69,7 +60,6 @@ def main():
         state["day_index"] = today
         state["last_heartbeat_times"] = {}
 
-    # ---------- НОВИЙ ЗАМІР ----------
     state["measure_count"] += 1
     n = state["measure_count"]
 
@@ -78,7 +68,6 @@ def main():
 
     percent = calc_percent(d_cur, state["d_past"])
 
-    # ---------- ALERT ----------
     if abs(percent) >= PERCENT_THRESHOLD:
         send_telegram(build_message(
             d_cur,
@@ -90,10 +79,11 @@ def main():
             dt=now
         ))
 
-    # ---------- HEARTBEAT ----------
     for hb in HEARTBEAT_TIMES:
         hb_dt = datetime.combine(now.date(), hb, tzinfo=TZ)
-        last_sent = state["last_heartbeat_times"].get(str(hb))
+        last_sent_raw = state["last_heartbeat_times"].get(str(hb))
+        last_sent = datetime.fromisoformat(last_sent_raw) if last_sent_raw else None
+
         if now >= hb_dt and (last_sent is None or now - last_sent >= timedelta(minutes=1)):
             send_telegram(build_message(
                 d_cur,
@@ -104,7 +94,7 @@ def main():
                 d_days=state["days_count"],
                 dt=now
             ))
-            state["last_heartbeat_times"][str(hb)] = now
+            state["last_heartbeat_times"][str(hb)] = now.isoformat()
 
     state["last_run_id"] = run_id
     save_state(state)
