@@ -1,13 +1,11 @@
 {
-  "days_count": 6,
-  "day_index": "2026-01-27",
-  "d_past": 252.01053918044386,
-  "avg_today": 247.82398598309615,
-  "measure_count": 39,
-  "last_heartbeat_times": {
-    "07:30:00": "2026-01-27T23:54:08.581398+02:00"
-  },
-  "last_run_id": "2026-01-27T23:54",
+  "days_count": 7,
+  "day_index": "2026-01-28",
+  "d_past": 251.41246015225133,
+  "avg_today": 249.41870162652833,
+  "measure_count": 1,
+  "last_heartbeat_times": {},
+  "last_run_id": "2026-01-28T00:22",
   "heartbeat_sent": {
     "07:30": true,
     "14:30": true
