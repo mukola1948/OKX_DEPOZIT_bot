@@ -2,10 +2,10 @@
   "days_count": 10,
   "day_index": "2026-01-31",
   "d_past": 248.17635159123944,
-  "avg_today": 229.67330658678554,
-  "measure_count": 11,
+  "avg_today": 229.408957571634,
+  "measure_count": 12,
   "last_heartbeat_times": {},
-  "last_run_id": "2026-01-31T09:48",
+  "last_run_id": "2026-01-31T10:30",
   "heartbeat_sent": {
     "07:30": true,
     "14:30": true
