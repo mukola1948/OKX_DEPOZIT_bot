@@ -1,27 +1,33 @@
 # ============================================================
 # ФАЙЛ: calculator.py
-# НАЗВА: Calculator
+# НАЗВА: OKX Deposit Calculations
 #
 # ОПИС:
-# - Чиста математика
-# - Без форматування
-# - Без Telegram
-# - Дминуле = історичний максимум
+# - Розрахунок відсоткової зміни
+# - Оновлення Dминуле (історичний максимум)
+#   УМОВА:
+#   якщо Dпоточне > Dминуле → новий максимум
 # ============================================================
 
-def calc_percent(current: float, past: float) -> float:
+def calc_percent(d_cur: float, d_past: float) -> float:
     """
-    Обчислення відсоткової зміни від Дминуле.
+    Розрахунок відсоткової зміни від Dминуле
     """
-    if past == 0:
+    if d_past == 0:
         return 0.0
-    return (current - past) / past * 100
+    return (d_cur - d_past) / d_past * 100.0
 
 
-def calc_new_d_past(old_d_past: float, current: float) -> float:
+def calc_new_d_past(d_past: float, d_cur: float) -> tuple[float, bool]:
     """
     Дминуле визначається як історичний максимум:
     якщо Дпоточне більше — оновлюємо,
     інакше залишаємо без змін.
+
+    Повертає:
+    - нове значення Dминуле
+    - прапорець new_max (True, якщо зафіксовано новий максимум)
     """
-    return max(old_d_past, current)
+    if d_cur > d_past:
+        return d_cur, True
+    return d_past, False

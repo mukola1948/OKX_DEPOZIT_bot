@@ -6,6 +6,8 @@
 # - Основна логіка запуску
 # - ALERT: лише при порозі ±5%
 # - HEARTBEAT: контрольні повідомлення
+# - Dминуле: історичний максимум
+#   якщо новий максимум → days_count = 0
 # ============================================================
 
 from datetime import datetime, time, timedelta
@@ -36,6 +38,7 @@ def main():
     today = now.date().isoformat()
     run_id = now.strftime("%Y-%m-%dT%H:%M")
 
+    # Захист від повторного запуску в ту ж хвилину
     if state.get("last_run_id") == run_id:
         return
 
@@ -43,7 +46,7 @@ def main():
     if d_cur is None:
         return
 
-    # --- Ініціалізація першого запуску ---
+    # Ініціалізація
     if state.get("day_index") is None:
         state.update({
             "day_index": today,
@@ -54,21 +57,27 @@ def main():
             "last_heartbeat_times": {}
         })
 
-    # --- Перехід на нову добу ---
+    # Перехід на новий день
     if state["day_index"] != today:
-        # ЄДИНО ПРАВИЛЬНИЙ виклик
-        state["d_past"] = calc_new_d_past(
+        new_d_past, is_new_max = calc_new_d_past(
             state["d_past"],
             d_cur
         )
 
-        state["days_count"] += 1
+        state["d_past"] = new_d_past
+
+        # КЛЮЧОВА ЗМІНА ПО ТЗ
+        if is_new_max:
+            state["days_count"] = 0
+        else:
+            state["days_count"] += 1
+
         state["measure_count"] = 0
         state["avg_today"] = d_cur
         state["day_index"] = today
         state["last_heartbeat_times"] = {}
 
-    # --- Оновлення середнього за день ---
+    # Поточне середнє дня
     state["measure_count"] += 1
     n = state["measure_count"]
 
@@ -79,7 +88,7 @@ def main():
 
     alert_sent = False
 
-    # --- ALERT ---
+    # ---------- ALERT ----------
     if abs(percent) >= PERCENT_THRESHOLD:
         send_telegram(build_message(
             d_cur,
@@ -92,7 +101,7 @@ def main():
         ))
         alert_sent = True
 
-    # --- HEARTBEAT ---
+    # ---------- HEARTBEAT ----------
     if not alert_sent:
         for hb in HEARTBEAT_TIMES:
             hb_dt = datetime.combine(now.date(), hb, tzinfo=TZ)
@@ -110,7 +119,7 @@ def main():
                     dt=now
                 ))
                 state["last_heartbeat_times"][str(hb)] = now.isoformat()
-                break
+                break  # лише ОДНЕ heartbeat за запуск
 
     state["last_run_id"] = run_id
     save_state(state)
