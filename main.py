@@ -43,6 +43,7 @@ def main():
     if d_cur is None:
         return
 
+    # --- Ініціалізація першого запуску ---
     if state.get("day_index") is None:
         state.update({
             "day_index": today,
@@ -53,17 +54,21 @@ def main():
             "last_heartbeat_times": {}
         })
 
+    # --- Перехід на нову добу ---
     if state["day_index"] != today:
+        # ЄДИНО ПРАВИЛЬНИЙ виклик
         state["d_past"] = calc_new_d_past(
             state["d_past"],
-            state["avg_today"]
+            d_cur
         )
+
         state["days_count"] += 1
         state["measure_count"] = 0
         state["avg_today"] = d_cur
         state["day_index"] = today
         state["last_heartbeat_times"] = {}
 
+    # --- Оновлення середнього за день ---
     state["measure_count"] += 1
     n = state["measure_count"]
 
@@ -74,6 +79,7 @@ def main():
 
     alert_sent = False
 
+    # --- ALERT ---
     if abs(percent) >= PERCENT_THRESHOLD:
         send_telegram(build_message(
             d_cur,
@@ -86,6 +92,7 @@ def main():
         ))
         alert_sent = True
 
+    # --- HEARTBEAT ---
     if not alert_sent:
         for hb in HEARTBEAT_TIMES:
             hb_dt = datetime.combine(now.date(), hb, tzinfo=TZ)

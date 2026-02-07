@@ -1,19 +1,27 @@
 # ============================================================
 # ФАЙЛ: calculator.py
-# Математика без форматування та Telegram
+# НАЗВА: Calculator
+#
+# ОПИС:
+# - Чиста математика
+# - Без форматування
+# - Без Telegram
+# - Дминуле = історичний максимум
 # ============================================================
 
 def calc_percent(current: float, past: float) -> float:
     """
-    Обчислення відсоткової зміни від попереднього значення.
+    Обчислення відсоткової зміни від Дминуле.
     """
     if past == 0:
         return 0.0
     return (current - past) / past * 100
 
 
-def calc_new_d_past(old_d_past: float, day_avg: float) -> float:
+def calc_new_d_past(old_d_past: float, current: float) -> float:
     """
-    Дминуле = історичний максимум (зафіксована логіка)
+    Дминуле визначається як історичний максимум:
+    якщо Дпоточне більше — оновлюємо,
+    інакше залишаємо без змін.
     """
-    return max(old_d_past, day_avg)
+    return max(old_d_past, current)
