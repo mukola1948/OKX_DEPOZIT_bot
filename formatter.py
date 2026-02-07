@@ -15,8 +15,8 @@ def build_message(
     d_avg_today: float,
     d_past: float,
     percent: float,
-    n_measures: int,   # кількість замірів сьогодні
-    d_days: int,       # кількість завершених днів
+    n_measures: int,
+    d_days: int,
     dt
 ) -> str:
     """
@@ -26,11 +26,11 @@ def build_message(
     percent_abs = abs(percent)
 
     line1 = f"Дпоточне({sign} {percent_abs:0.1f} %)= {fmt_money(d_cur)}"
-    line2 = f"Дсереднє(1-{n_measures:02d}).....= {fmt_money(d_avg_today)}"
+    line2 = f"Дсереднє(1-{n_measures:02d})........= {fmt_money(d_avg_today)}"
     line3 = f"Дминуле({12*' '}{d_days})= {fmt_money(d_past)}"
     line4 = (
         "OKX"
-        + "." * 2
+        + "." * 3
         + dt.strftime("%H:%M")
         + "." * 2
         + dt.strftime("%d-%m-%Y")

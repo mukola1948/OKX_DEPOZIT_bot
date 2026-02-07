@@ -56,8 +56,7 @@ def main():
     if state["day_index"] != today:
         state["d_past"] = calc_new_d_past(
             state["d_past"],
-            state["avg_today"],
-            state["days_count"]
+            state["avg_today"]
         )
         state["days_count"] += 1
         state["measure_count"] = 0
@@ -75,7 +74,6 @@ def main():
 
     alert_sent = False
 
-    # ---------- ALERT ----------
     if abs(percent) >= PERCENT_THRESHOLD:
         send_telegram(build_message(
             d_cur,
@@ -88,12 +86,12 @@ def main():
         ))
         alert_sent = True
 
-    # ---------- HEARTBEAT (тільки якщо НЕ БУВ alert) ----------
     if not alert_sent:
         for hb in HEARTBEAT_TIMES:
             hb_dt = datetime.combine(now.date(), hb, tzinfo=TZ)
             last_sent_str = state["last_heartbeat_times"].get(str(hb))
             last_sent = datetime.fromisoformat(last_sent_str) if last_sent_str else None
+
             if now >= hb_dt and (last_sent is None or now - last_sent >= timedelta(minutes=1)):
                 send_telegram(build_message(
                     d_cur,
@@ -105,7 +103,7 @@ def main():
                     dt=now
                 ))
                 state["last_heartbeat_times"][str(hb)] = now.isoformat()
-                break  # 🔒 лише ОДНЕ heartbeat за запуск
+                break
 
     state["last_run_id"] = run_id
     save_state(state)

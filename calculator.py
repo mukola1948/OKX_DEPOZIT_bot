@@ -1,5 +1,5 @@
 # ============================================================
-# calculator.py
+# ФАЙЛ: calculator.py
 # Математика без форматування та Telegram
 # ============================================================
 
@@ -12,8 +12,8 @@ def calc_percent(current: float, past: float) -> float:
     return (current - past) / past * 100
 
 
-def calc_new_d_past(old_d_past: float, day_avg: float, days_count: int) -> float:
+def calc_new_d_past(old_d_past: float, day_avg: float) -> float:
     """
-    Накопичувальне середнє за всі завершені дні.
+    Дминуле = історичний максимум (зафіксована логіка)
     """
-    return (old_d_past * days_count + day_avg) / (days_count + 1)
+    return max(old_d_past, day_avg)
